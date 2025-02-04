@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valentine Puzzle</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: url('img/Background.jpg') no-repeat center center fixed;
+        background-size: cover;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+        position: relative;
+    }
+	
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+    #puzzle-area {
+        width: 300px;
+        height: 300px;
+        border: 2px dashed pink;
+        position: relative;
+    }
+
+    .puzzle-piece {
+        width: 140px;
+        height: 140px;
+        position: absolute;
+        cursor: grab;
+        z-index: 5;
+    }
+
+    #heart-full, #message, #buttons, #result-icon, #try-again, #heart-frame {
+        display: none;
+        position: absolute;
+        z-index: 10;
+    }
+
+    #heart-full {
+        width: 500px;
+        cursor: pointer;
+    }
+
+    #message {
+        font-family: 'Times New Roman', serif;
+        position: center;
+        color: white;
+        font-size: 25px;
+        font-weight: bold;
+        text-align: center;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 15;
+    }
+	
+#valentine-message {
+    font-family: 'Times New Roman', serif;
+    position: absolute;
+    color: white;
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+    top: 50%;  /* رفع الجملة أكثر */
+    left: 50%;
+    transform: translate(-50%, -150%);  /* تمركز الجملة */
+    z-index: 15;
+}
+
+    #buttons {
+        top: 60%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .btn {
+        background-color: white;
+        color: black;
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+    #result-icon {
+        width: 130px;  /* حجم الصورة */
+        height: 100px;
+        display: none;
+        position: absolute;
+    }
+	
+	#result-icon {
+    width: 130px; /* حجم الأيقونة */
+    height: 100px;
+	right: 50px
+	top: 90%;
+    position: absolute; /* لضبط الموقع بدقة */
+    z-index: 20; /* للتأكد من ظهورها فوق العناصر الأخرى */
+    display: none; /* مخفية حتى يتم الضغط على الزر */
+}
+
+    #try-again {
+        color: red;
+        font-size: 50px;
+        font-weight: bold;
+        font-family: 'Times New Roman', serif;
+        top: 80%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #heart-frame {
+        width: 100%;
+        height: 100%;
+        background: url('img/heartsframe.png') no-repeat center center;
+        background-size: cover;
+        z-index: 5;
+    }
+</style>
+</head>
+<body>
+
+<!-- منطقة التجميع -->
+<div id="puzzle-area"></div>
+
+<!-- قطع القلب -->
+<img src="img/heart_piece_1.png" class="puzzle-piece" id="piece1" style="top: 10%; left: 5%;">
+<img src="img/heart_piece_2.png" class="puzzle-piece" id="piece2" style="top: 10%; left: 45%;">
+<img src="img/heart_piece_3.png" class="puzzle-piece" id="piece3" style="bottom: 10%; left: 20%;">
+<img src="img/heart_piece_4.png" class="puzzle-piece" id="piece4" style="bottom: 10%; right: 10%;">
+
+<!-- القلب المكتمل والرسائل -->
+<img src="img/heart_full.png" id="heart-full">
+<div id="message">You completed my hear<br>Would you unlock it?</div>
+<div id="buttons">
+<div id="valentine-message">Would You Be <br> MY Valentine?</div>
+
+    <button class="btn" id="yes-btn">Yes</button>
+    <button class="btn" id="no-btn">No</button>
+</div>
+<img id="result-icon">  <!-- مكان عرض الصورة -->
+<div id="try-again">Try Again!!</div>
+<div id="heart-frame"></div>
+
+
+<script>
+    const pieces = document.querySelectorAll('.puzzle-piece');
+    const puzzleArea = document.getElementById('puzzle-area');
+    const heartFull = document.getElementById('heart-full');
+    const message = document.getElementById('message');
+    const buttons = document.getElementById('buttons');
+    const yesBtn = document.getElementById('yes-btn');
+    const noBtn = document.getElementById('no-btn');
+    const resultIcon = document.getElementById('result-icon');
+    const tryAgain = document.getElementById('try-again');
+    const heartFrame = document.getElementById('heart-frame');
+
+    const correctPositions = {
+        piece1: { x: 19, y: 20 },
+        piece2: { x: 15, y: 140 },
+        piece3: { x: 155, y: 140 },
+        piece4: { x: 148, y: 20 }
+    };
+
+    pieces.forEach(piece => {
+        piece.addEventListener('mousedown', startDrag);
+    });
+
+    function startDrag(e) {
+        const piece = e.target;
+        let offsetX = e.clientX - piece.offsetLeft;
+        let offsetY = e.clientY - piece.offsetTop;
+
+        function dragMove(e) {
+            piece.style.left = (e.clientX - offsetX) + 'px';
+            piece.style.top = (e.clientY - offsetY) + 'px';
+        }
+
+        function stopDrag() {
+            if (isInPuzzleArea(piece)) {
+                snapToCorrectPosition(piece);
+            }
+            document.removeEventListener('mousemove', dragMove);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('mouseup', stopDrag);
+    }
+
+    function isInPuzzleArea(piece) {
+        const pieceRect = piece.getBoundingClientRect();
+        const areaRect = puzzleArea.getBoundingClientRect();
+        return (
+            pieceRect.left < areaRect.right &&
+            pieceRect.right > areaRect.left &&
+            pieceRect.top < areaRect.bottom &&
+            pieceRect.bottom > areaRect.top
+        );
+    }
+
+    function snapToCorrectPosition(piece) {
+        const position = correctPositions[piece.id];
+        if (position) {
+            piece.style.left = (puzzleArea.offsetLeft + position.x) + 'px';
+            piece.style.top = (puzzleArea.offsetTop + position.y) + 'px';
+
+            piece.dataset.placed = "true";
+            checkPuzzleCompletion();
+        }
+    }
+
+    function checkPuzzleCompletion() {
+        const allPlaced = [...pieces].every(piece => piece.dataset.placed === "true");
+        if (allPlaced) {
+            showHeart();
+        }
+    }
+
+    function showHeart() {
+        heartFull.style.display = 'block';
+        heartFull.style.top = '45%';
+        heartFull.style.left = '50%';
+        heartFull.style.transform = 'translate(-50%, -50%)';
+        message.style.display = 'block';
+    }
+
+   heartFull.addEventListener('click', () => {
+    buttons.style.display = 'block';
+    message.style.display = 'none';  // إخفاء الرسالة الأصلية
+    document.getElementById('valentine-message').style.display = 'block';  // عرض الجملة الجديدة
+});
+
+    yesBtn.addEventListener('click', () => {
+        resultIcon.src = 'img/smile.png';
+        resultIcon.style.display = 'block';
+        heartFrame.style.display = 'block';
+        tryAgain.style.display = 'none';
+		resultIcon.style.left = '30%';
+        resultIcon.style.top = '60%'
+    });
+
+    noBtn.addEventListener('click', () => {
+        resultIcon.src = 'img/sad.png';         // تعيين صورة الوجه المستاء
+        resultIcon.style.display = 'block';     // عرض الصورة
+		const noBtnRect = noBtn.getBoundingClientRect();
+		
+		resultIcon.style.right = '370px';
+        resultIcon.style.top = '20';
+        heartFrame.style.display = 'none';      // إخفاء إطار القلوب
+        tryAgain.style.display = 'block';       // عرض رسالة "Try Again!!"
+    });
+</script>
+
+</body>
+</html>
